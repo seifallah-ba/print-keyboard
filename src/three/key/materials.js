@@ -4,6 +4,7 @@ import { initial_settings } from "../../store/startup";
 import { TextureLoader } from "three/src/loaders/TextureLoader.js";
 import ambiantOcclusionPath from "../../assets/dist/shadow-key-noise.png";
 import lightMapPath from "../../assets/materials/white.png";
+import asset from "../../assets/bg2.jpg";
 
 const loader = new TextureLoader();
 const ambiantOcclusionMap = loader.load(ambiantOcclusionPath);
@@ -44,6 +45,57 @@ const setMaterialIndexes = (mesh, side, top, isoent) => {
 };
 
 //generate top and side materials for a single color set
+// Create gradient texture
+function createGradientTexture(
+  greenIntensity = 100,
+  yellowIntensity = 200,
+  direction = "horizontal"
+) {
+  const size = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+
+  const context = canvas.getContext("2d");
+
+  // Create gradient
+  let gradient;
+  if (direction === "horizontal") {
+    gradient = context.createLinearGradient(0, 0, size, 0);
+  } else if (direction === "vertical") {
+    gradient = context.createLinearGradient(0, 0, 0, size);
+  } else {
+    // diagonal
+    gradient = context.createLinearGradient(0, 0, size, size);
+  }
+
+  gradient.addColorStop(
+    0,
+    `rgb(${greenIntensity}, 255, ${greenIntensity / 2})`
+  );
+  gradient.addColorStop(1, `rgb(255, 255, ${yellowIntensity / 3})`);
+
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, size, size);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+// let  currentTexture = createGradientTexture();
+
+const imgUrl = asset;
+let currentTexture = loader.load(
+  imgUrl,
+  (texture) => {
+    texture.needsUpdate = true;
+  },
+  undefined,
+  (error) => {
+    console.error("Error loading texture:", error);
+  }
+);
 const getMaterialSet = (opts, offset) => {
   let key = `mat${opts.background}`;
 
@@ -58,12 +110,14 @@ const getMaterialSet = (opts, offset) => {
   if (computed_materials[key]) {
     return [computed_materials[key].clone(), top];
   }
+
   let side = new THREE.MeshStandardMaterial({
     aoMap: ambiantOcclusionMap,
-    color: opts.background,
+    // color: '#f83c03',
     aoMapIntensity: 0.4,
     lightMap: lightMap,
     lightMapIntensity: 0,
+    map: currentTexture, // Use uploaded texture if available
   });
   computed_materials[key] = side;
   return [side, top];

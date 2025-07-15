@@ -4,6 +4,7 @@ import initSubscriber from "redux-subscriber";
 import settingsReducer from "./slices/settings";
 import switchesReducer from "./slices/switches";
 import colorwaysReducer from "./slices/colorways";
+import textureReducer from "./slices/textureSlice";
 import caseReducer from "./slices/case";
 import keysReducer from "./slices/keys";
 import { initial_settings } from "./startup";
@@ -17,6 +18,7 @@ const store = configureStore({
     settings: settingsReducer,
     switches: switchesReducer,
     colorways: colorwaysReducer,
+    texture: textureReducer,
   },
   preloadedState: initial_settings,
 });
@@ -27,6 +29,7 @@ if (ENABLE_LOCAL_STORAGE) {
     saveState({
       settings: state.colorways.custom,
       active: state.colorways.active,
+      currentTexture: state.texture.keycapTexture,
     });
   });
 }
